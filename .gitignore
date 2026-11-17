@@ -1,0 +1,28 @@
+# ---------- Build (.NET / Visual Studio) ----------
+bin/
+obj/
+publish/
+.vs/
+*.user
+*.suo
+*.userprefs
+TestResults/
+*.log
+
+# ---------- Segredos: NUNCA commitar ----------
+# Senhas, chaves de criptografia e certificados ficam fora do repositório
+# (variáveis de ambiente ou arquivos locais ignorados abaixo).
+.env
+*.env
+appsettings.local.json
+secrets.json
+*.pfx
+*.key
+*.pem
+*.p12
+
+# ---------- Editores / sistema ----------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
