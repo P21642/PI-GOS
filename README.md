@@ -73,13 +73,13 @@ Regra do repositório: senhas, chaves e certificados **nunca** são commitados
 
 ## 7. Equipe
 
-| Integrante | Área |
-|---|---|
-| _(Matheus Hofstetter Trevisan Pereira)_ | Banco de dados |
-| _(Enrico Marcolini Rosselló)_ | Integração |
-| _(Luan Victor Fuzinatto)_ | Criptografia |
-| _(Gabriel Montagner Ferraz de Toledo)_ | Visual |
-| _(Caetano Bertoni Squarcini Vicco)_ | Análise de segurança |
+| Integrante | RA | Área |
+|---|---|---|
+| _(Matheus Hofstetter Trevisan Pereira)_ | 25021642 | Banco de dados |
+| _(Enrico Marcolini Rosselló)_ | preencham | Integração |
+| _(Luan Victor Fuzinatto)_ | preencham | Criptografia |
+| _(Gabriel Montagner Ferraz de Toledo)_ | preencham | Visual |
+| _(Caetano Bertoni Squarcini Vicco)_ | preencham | Análise de segurança |
 
 ## 8. Convenções de Git
 
