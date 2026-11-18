@@ -79,7 +79,7 @@ Regra do repositório: senhas, chaves e certificados **nunca** são commitados
 | _(Enrico Marcolini Rosselló)_ | preencham | Integração |
 | _(Luan Victor Fuzinatto)_ | preencham | Criptografia |
 | _(Gabriel Montagner Ferraz de Toledo)_ | preencham | Visual |
-| _(Caetano Bertoni Squarcini Vicco)_ | preencham | Análise de segurança |
+| _(Caetano Bertoni Squarcini Vicco)_ | 25022360 | Análise de segurança |
 
 ## 8. Convenções de Git
 
