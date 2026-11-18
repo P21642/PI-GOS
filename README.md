@@ -76,7 +76,7 @@ Regra do repositório: senhas, chaves e certificados **nunca** são commitados
 | Integrante | RA | Área |
 |---|---|---|
 | _(Matheus Hofstetter Trevisan Pereira)_ | 25021642 | Banco de dados |
-| _(Enrico Marcolini Rosselló)_ | preencham | Integração |
+| _(Enrico Marcolini Rosselló)_ | 25021062 | Integração |
 | _(Luan Victor Fuzinatto)_ | preencham | Criptografia |
 | _(Gabriel Montagner Ferraz de Toledo)_ | preencham | Visual |
 | _(Caetano Bertoni Squarcini Vicco)_ | 25022360 | Análise de segurança |
