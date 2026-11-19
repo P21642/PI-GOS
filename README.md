@@ -78,7 +78,7 @@ Regra do repositório: senhas, chaves e certificados **nunca** são commitados
 | _(Matheus Hofstetter Trevisan Pereira)_ | 25021642 | Banco de dados |
 | _(Enrico Marcolini Rosselló)_ | 25021062 | Integração |
 | _(Luan Victor Fuzinatto)_ | preencham | Criptografia |
-| _(Gabriel Montagner Ferraz de Toledo)_ | preencham | Visual |
+| _(Gabriel Montagner Ferraz de Toledo)_ | 25003232 | Visual |
 | _(Caetano Bertoni Squarcini Vicco)_ | 25022360 | Análise de segurança |
 
 ## 8. Convenções de Git
