@@ -1,18 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <!-- Permite rodar em runtimes mais novos (.NET 9, 10...) sem precisar mexer aqui -->
-    <RollForward>Major</RollForward>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>GOS</RootNamespace>
+    <AssemblyName>GOS</AssemblyName>
+    <ApplicationHighDpiMode>SystemAware</ApplicationHighDpiMode>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+    <!-- Permite rodar em runtimes mais novos (.NET 9, 10...) -->
+    <RollForward>Major</RollForward>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="2.3.7" />
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-  </ItemGroup>
 
 </Project>

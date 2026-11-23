@@ -1,65 +1,79 @@
-using MySqlConnector;
-
 namespace GOS;
+
+// =====================================================================
+//  VERSÃO SEM BANCO DE DADOS
+//  Os dados ficam só na memória e voltam ao estado inicial ao fechar o programa.
+//
+//  Os nomes das classes e dos métodos são os mesmos da versão com MySQL.
+//  Para integrar o banco depois, basta trocar ESTE arquivo pelo
+//  Repositories.cs da versão com banco (e adicionar o Database.cs e os pacotes).
+// =====================================================================
+
+internal record OrdemRegistro(
+    int Id, string Descricao, string Status, DateTime Abertura, DateTime? Fechamento,
+    int ClienteId, int ResponsavelId, int ServicoId);
+
+internal static class Banco
+{
+    public static readonly List<Usuario> Usuarios = new();
+    public static readonly List<Cliente> Clientes = new();
+    public static readonly List<Servico> Servicos = new();
+    public static readonly List<OrdemRegistro> Ordens = new();
+
+    public static int ProxUsuario = 1;
+    public static int ProxCliente = 1;
+    public static int ProxOrdem = 1;
+
+    // Dados de exemplo
+    static Banco()
+    {
+        // Senha guardada em texto puro só porque é demonstração.
+        // Com o banco, use BCrypt (como na versão anterior).
+        Usuarios.Add(new Usuario(ProxUsuario++, "Administrador", "admin@gos.com", "admin123", Cargo.Admin));
+        Usuarios.Add(new Usuario(ProxUsuario++, "Carlos Técnico", "tecnico@gos.com", "123456", Cargo.Padrao));
+
+        Clientes.Add(new Cliente(ProxCliente++, "Maria Silva", "maria.silva@email.com", "(19) 99999-1111"));
+        Clientes.Add(new Cliente(ProxCliente++, "João Souza", "joao.souza@email.com", "(19) 98888-2222"));
+        Clientes.Add(new Cliente(ProxCliente++, "Padaria Pão Quente", "contato@paoquente.com", "(19) 3333-4444"));
+
+        Servicos.Add(new Servico(1, "manutencao"));
+        Servicos.Add(new Servico(2, "instalacao"));
+
+        var agora = DateTime.Now;
+        Ordens.Add(new OrdemRegistro(ProxOrdem++, "Troca da fonte do computador do caixa", StatusOS.Concluido, agora.AddDays(-6), agora.AddDays(-5), 3, 2, 1));
+        Ordens.Add(new OrdemRegistro(ProxOrdem++, "Instalação de roteador Wi-Fi", StatusOS.Concluido, agora.AddDays(-4), agora.AddDays(-4).AddHours(3), 1, 2, 2));
+        Ordens.Add(new OrdemRegistro(ProxOrdem++, "Notebook não liga após queda", StatusOS.EmAndamento, agora.AddDays(-2), null, 2, 2, 1));
+        Ordens.Add(new OrdemRegistro(ProxOrdem++, "Instalação de câmeras de segurança (4 un.)", StatusOS.EmAndamento, agora.AddDays(-1), null, 3, 1, 2));
+        Ordens.Add(new OrdemRegistro(ProxOrdem++, "Formatação e instalação de programas", StatusOS.Aberto, agora.AddHours(-3), null, 1, 1, 1));
+    }
+}
 
 // ============================ USUÁRIOS ============================
 public static class UsuarioRepository
 {
-    public static int Contar()
-    {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn, "SELECT COUNT(*) FROM usuarios");
-        return Convert.ToInt32(cmd.ExecuteScalar());
-    }
+    public static int Contar() => Banco.Usuarios.Count;
 
     public static void Criar(string nome, string email, string senha, string cargo)
     {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn,
-            "INSERT INTO usuarios (nome, email, senha_hash, cargo) VALUES (@nome, @email, @hash, @cargo)",
-            ("@nome", nome),
-            ("@email", email),
-            ("@hash", BCrypt.Net.BCrypt.HashPassword(senha)),
-            ("@cargo", cargo));
-        cmd.ExecuteNonQuery();
+        if (Banco.Usuarios.Any(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Já existe um usuário com esse e-mail.");
+
+        Banco.Usuarios.Add(new Usuario(Banco.ProxUsuario++, nome, email, senha, cargo));
     }
 
-    public static Usuario? Autenticar(string email, string senha)
-    {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn,
-            "SELECT id, nome, email, senha_hash, cargo FROM usuarios WHERE email = @email",
-            ("@email", email));
-        using var r = cmd.ExecuteReader();
-        if (!r.Read()) return null;
+    public static Usuario? Autenticar(string email, string senha) =>
+        Banco.Usuarios.FirstOrDefault(u =>
+            u.Email.Equals(email, StringComparison.OrdinalIgnoreCase) && u.SenhaHash == senha);
 
-        var usuario = Ler(r);
-        return BCrypt.Net.BCrypt.Verify(senha, usuario.SenhaHash) ? usuario : null;
-    }
-
-    public static List<Usuario> Listar()
-    {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn, "SELECT id, nome, email, senha_hash, cargo FROM usuarios ORDER BY nome");
-        using var r = cmd.ExecuteReader();
-        var lista = new List<Usuario>();
-        while (r.Read()) lista.Add(Ler(r));
-        return lista;
-    }
+    public static List<Usuario> Listar() => Banco.Usuarios.OrderBy(u => u.Nome).ToList();
 
     public static bool Excluir(int id)
     {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn, "DELETE FROM usuarios WHERE id = @id", ("@id", id));
-        return cmd.ExecuteNonQuery() > 0;
-    }
+        if (Banco.Ordens.Any(o => o.ResponsavelId == id))
+            throw new InvalidOperationException("Não é possível excluir: existem ordens de serviço vinculadas a este usuário.");
 
-    private static Usuario Ler(MySqlDataReader r) => new(
-        r.GetInt32("id"),
-        r.GetString("nome"),
-        r.GetString("email"),
-        r.GetString("senha_hash"),
-        r.GetString("cargo"));
+        return Banco.Usuarios.RemoveAll(u => u.Id == id) > 0;
+    }
 }
 
 // ============================ CLIENTES ============================
@@ -67,149 +81,80 @@ public static class ClienteRepository
 {
     public static void Criar(string nome, string email, string telefone)
     {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn,
-            "INSERT INTO clientes (nome, email, telefone) VALUES (@nome, @email, @telefone)",
-            ("@nome", nome), ("@email", email), ("@telefone", telefone));
-        cmd.ExecuteNonQuery();
+        if (Banco.Clientes.Any(c => c.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Já existe um cliente com esse e-mail.");
+
+        Banco.Clientes.Add(new Cliente(Banco.ProxCliente++, nome, email, telefone));
     }
 
-    public static List<Cliente> Listar()
-    {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn, "SELECT id, nome, email, telefone FROM clientes ORDER BY nome");
-        using var r = cmd.ExecuteReader();
-        var lista = new List<Cliente>();
-        while (r.Read())
-            lista.Add(new Cliente(r.GetInt32("id"), r.GetString("nome"), r.GetString("email"), r.GetString("telefone")));
-        return lista;
-    }
+    public static List<Cliente> Listar() => Banco.Clientes.OrderBy(c => c.Nome).ToList();
 
     public static void Atualizar(Cliente c)
     {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn,
-            "UPDATE clientes SET nome = @nome, email = @email, telefone = @telefone WHERE id = @id",
-            ("@nome", c.Nome), ("@email", c.Email), ("@telefone", c.Telefone), ("@id", c.Id));
-        cmd.ExecuteNonQuery();
+        if (Banco.Clientes.Any(x => x.Id != c.Id && x.Email.Equals(c.Email, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("Já existe um cliente com esse e-mail.");
+
+        int i = Banco.Clientes.FindIndex(x => x.Id == c.Id);
+        if (i >= 0) Banco.Clientes[i] = c;
     }
 
     public static bool Excluir(int id)
     {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn, "DELETE FROM clientes WHERE id = @id", ("@id", id));
-        return cmd.ExecuteNonQuery() > 0;
+        if (Banco.Ordens.Any(o => o.ClienteId == id))
+            throw new InvalidOperationException("Não é possível excluir: existem ordens de serviço vinculadas a este cliente.");
+
+        return Banco.Clientes.RemoveAll(c => c.Id == id) > 0;
     }
 }
 
 // ============================ SERVIÇOS ============================
 public static class ServicoRepository
 {
-    /// <summary>Garante que os tipos "manutencao" e "instalacao" existam.</summary>
-    public static void GarantirPadrao()
-    {
-        using var conn = Database.Open();
-        using var count = Database.Cmd(conn, "SELECT COUNT(*) FROM servicos");
-        if (Convert.ToInt32(count.ExecuteScalar()) > 0) return;
+    public static void GarantirPadrao() { /* já carregado em memória */ }
 
-        using var ins = Database.Cmd(conn,
-            "INSERT INTO servicos (tipo_de_servico) VALUES ('manutencao'), ('instalacao')");
-        ins.ExecuteNonQuery();
-    }
-
-    public static List<Servico> Listar()
-    {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn, "SELECT id, tipo_de_servico FROM servicos ORDER BY id");
-        using var r = cmd.ExecuteReader();
-        var lista = new List<Servico>();
-        while (r.Read()) lista.Add(new Servico(r.GetInt32("id"), r.GetString("tipo_de_servico")));
-        return lista;
-    }
+    public static List<Servico> Listar() => Banco.Servicos.OrderBy(s => s.Id).ToList();
 }
 
 // ======================= ORDENS DE SERVIÇO ========================
 public static class OrdemServicoRepository
 {
-    private const string SelectBase = @"
-        SELECT os.id, os.descricao, os.status, os.data_abertura, os.data_fechamento,
-               os.cliente_id, c.nome AS cliente_nome,
-               os.responsavel_id, u.nome AS responsavel_nome,
-               os.classe_servico_id, s.tipo_de_servico
-        FROM ordem_servicos os
-        JOIN clientes c ON c.id = os.cliente_id
-        JOIN usuarios u ON u.id = os.responsavel_id
-        JOIN servicos s ON s.id = os.classe_servico_id ";
-
     public static int Abrir(string descricao, int clienteId, int responsavelId, int classeServicoId)
     {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn,
-            @"INSERT INTO ordem_servicos
-                (descricao, status, data_abertura, cliente_id, responsavel_id, classe_servico_id)
-              VALUES (@descricao, 'aberto', NOW(), @cliente, @responsavel, @classe)",
-            ("@descricao", descricao),
-            ("@cliente", clienteId),
-            ("@responsavel", responsavelId),
-            ("@classe", classeServicoId));
-        cmd.ExecuteNonQuery();
-        return (int)cmd.LastInsertedId;
+        int id = Banco.ProxOrdem++;
+        Banco.Ordens.Add(new OrdemRegistro(id, descricao, StatusOS.Aberto, DateTime.Now, null,
+            clienteId, responsavelId, classeServicoId));
+        return id;
     }
 
-    public static List<OrdemServico> Listar(string? status = null)
-    {
-        return status == null
-            ? Consultar("")
-            : Consultar("WHERE os.status = @status", ("@status", status));
-    }
+    public static List<OrdemServico> Listar(string? status = null) =>
+        Banco.Ordens
+            .Where(o => status == null || o.Status == status)
+            .OrderByDescending(o => o.Id)
+            .Select(Montar)
+            .ToList();
 
-    public static OrdemServico? BuscarPorId(int id)
-    {
-        return Consultar("WHERE os.id = @id", ("@id", id)).FirstOrDefault();
-    }
+    public static OrdemServico? BuscarPorId(int id) =>
+        Banco.Ordens.Where(o => o.Id == id).Select(Montar).FirstOrDefault();
 
-    /// <summary>Atualiza o status. Ao concluir, grava a data de fechamento; ao reabrir, limpa.</summary>
     public static bool AtualizarStatus(int id, string status)
     {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn,
-            @"UPDATE ordem_servicos
-              SET status = @status,
-                  data_fechamento = CASE WHEN @status = 'concluido' THEN NOW() ELSE NULL END
-              WHERE id = @id",
-            ("@status", status), ("@id", id));
-        return cmd.ExecuteNonQuery() > 0;
-    }
+        int i = Banco.Ordens.FindIndex(o => o.Id == id);
+        if (i < 0) return false;
 
-    public static bool Excluir(int id)
-    {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn, "DELETE FROM ordem_servicos WHERE id = @id", ("@id", id));
-        return cmd.ExecuteNonQuery() > 0;
-    }
-
-    private static List<OrdemServico> Consultar(string where, params (string nome, object? valor)[] parametros)
-    {
-        using var conn = Database.Open();
-        using var cmd = Database.Cmd(conn, SelectBase + where + " ORDER BY os.id DESC", parametros);
-        using var r = cmd.ExecuteReader();
-
-        var lista = new List<OrdemServico>();
-        while (r.Read())
+        Banco.Ordens[i] = Banco.Ordens[i] with
         {
-            lista.Add(new OrdemServico(
-                r.GetInt32("id"),
-                r.GetString("descricao"),
-                r.GetString("status"),
-                r.GetDateTime("data_abertura"),
-                r.IsDBNull(r.GetOrdinal("data_fechamento")) ? null : r.GetDateTime("data_fechamento"),
-                r.GetInt32("cliente_id"),
-                r.GetString("cliente_nome"),
-                r.GetInt32("responsavel_id"),
-                r.GetString("responsavel_nome"),
-                r.GetInt32("classe_servico_id"),
-                r.GetString("tipo_de_servico")));
-        }
-        return lista;
+            Status = status,
+            Fechamento = status == StatusOS.Concluido ? DateTime.Now : (DateTime?)null
+        };
+        return true;
     }
+
+    public static bool Excluir(int id) => Banco.Ordens.RemoveAll(o => o.Id == id) > 0;
+
+    // Equivale ao JOIN do SQL: junta os nomes de cliente, responsável e serviço
+    private static OrdemServico Montar(OrdemRegistro r) => new(
+        r.Id, r.Descricao, r.Status, r.Abertura, r.Fechamento,
+        r.ClienteId, Banco.Clientes.First(c => c.Id == r.ClienteId).Nome,
+        r.ResponsavelId, Banco.Usuarios.First(u => u.Id == r.ResponsavelId).Nome,
+        r.ServicoId, Banco.Servicos.First(s => s.Id == r.ServicoId).Tipo);
 }
