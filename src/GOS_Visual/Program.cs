@@ -8,7 +8,13 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
+        // Erro inesperado numa tela: mostra mensagem segura em vez de derrubar o programa.
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+        Application.ThreadException += (_, e) => Tema.Erro(Erros.Traduzir(e.Exception));
+
         ApplicationConfiguration.Initialize();
+
+        if (!Iniciar()) return;
 
         // Login -> Principal -> (Sair) -> Login ...
         while (true)
@@ -16,10 +22,65 @@ internal static class Program
             using var login = new LoginForm();
             if (login.ShowDialog() != DialogResult.OK || login.UsuarioLogado == null) return;
 
+            // A partir daqui toda conexão com o banco informa quem está logado (auditoria).
+            Database.UsuarioLogadoId = login.UsuarioLogado.Id;
+
             using var principal = new MainForm(login.UsuarioLogado);
             Application.Run(principal);
 
+            Database.UsuarioLogadoId = null;
             if (!principal.Deslogou) return;
+        }
+    }
+
+    /// <summary>Confere conexão com o MySQL, configuração de criptografia e cria o primeiro administrador.</summary>
+    private static bool Iniciar()
+    {
+        if (!Database.TestarConexao(out var erro))
+        {
+            Tema.Erro("Não foi possível conectar ao MySQL:\n" + erro +
+                "\n\nVerifique GOS_DB_USER e GOS_DB_PASSWORD (e GOS_DB_HOST/PORT/NAME, se usar), " +
+                "se o MySQL está rodando e se o banco 'gos' foi criado (database/database.sql).");
+            return false;
+        }
+
+        if (!Cripto.ChavesOk(out var erroChaves))
+        {
+            Tema.Erro("Configuração de criptografia inválida:\n" + erroChaves + "\n\nVeja a seção 4 do README e o Cripto.cs.");
+            return false;
+        }
+
+        try
+        {
+            ServicoRepository.GarantirPadrao();
+            return UsuarioRepository.Contar() > 0 || CadastrarPrimeiroAdmin();
+        }
+        catch (Exception ex)
+        {
+            Tema.Erro(Erros.Traduzir(ex));
+            return false;
+        }
+    }
+
+    // Primeira execução: ainda não existe nenhum usuário, então o primeiro é sempre administrador.
+    private static bool CadastrarPrimeiroAdmin()
+    {
+        Tema.Info("Primeiro acesso: cadastre o administrador do sistema.\n(O cargo escolhido na tela é ignorado: o primeiro usuário é sempre administrador.)");
+
+        while (true)
+        {
+            using var dlg = new UsuarioDialog();
+            if (dlg.ShowDialog() != DialogResult.OK) return false;
+
+            try
+            {
+                UsuarioRepository.Criar(dlg.Nome, dlg.Email, dlg.Senha, Cargo.Admin);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Tema.Erro(Erros.Traduzir(ex));
+            }
         }
     }
 }
@@ -49,14 +110,6 @@ public sealed class LoginForm : Form
         entrar.Margin = new Padding(0, 0, 0, 18);
         entrar.Click += (_, _) => Entrar();
 
-        var dica = new Label
-        {
-            Text = "Acesso de demonstração:\nadmin@gos.com  /  admin123",
-            AutoSize = true,
-            ForeColor = Tema.TextoSuave,
-            Font = new Font("Segoe UI", 9F)
-        };
-
         var corpo = new FlowLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -69,7 +122,6 @@ public sealed class LoginForm : Form
         corpo.Controls.Add(Tema.Rotulo("Senha", true));
         corpo.Controls.Add(_senha);
         corpo.Controls.Add(entrar);
-        corpo.Controls.Add(dica);
 
         var topo = new Panel { Dock = DockStyle.Top, Height = 140, BackColor = Tema.Primaria };
         var subtitulo = new Label
@@ -117,7 +169,7 @@ public sealed class LoginForm : Form
         }
         catch (Exception ex)
         {
-            Tema.Erro(ex.Message);
+            Tema.Erro(Erros.Traduzir(ex));
         }
     }
 }

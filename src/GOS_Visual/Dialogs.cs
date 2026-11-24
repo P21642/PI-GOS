@@ -118,6 +118,7 @@ public sealed class ClienteDialog : DialogoBase
         _nome = Campo("Nome", cliente?.Nome ?? "");
         _email = Campo("E-mail", cliente?.Email ?? "");
         _telefone = Campo("Telefone", cliente?.Telefone ?? "");
+        _telefone.MaxLength = 30; // limite da coluna cifrada no banco
         AdicionarBotoes();
     }
 
@@ -148,7 +149,7 @@ public sealed class UsuarioDialog : DialogoBase
     {
         _nome = Campo("Nome");
         _email = Campo("E-mail");
-        _senha = Campo("Senha (mínimo 6 caracteres)", senha: true);
+        _senha = Campo("Senha (8 a 128 caracteres)", senha: true);
         _confirma = Campo("Confirmar senha", senha: true);
         _cargo = Combo("Cargo", new[] { Cargo.Padrao, Cargo.Admin });
         AdicionarBotoes();
@@ -158,7 +159,7 @@ public sealed class UsuarioDialog : DialogoBase
     {
         if (Nome.Length == 0) return Falha("Informe o nome.", _nome);
         if (!Tema.EmailValido(Email)) return Falha("Informe um e-mail válido.", _email);
-        if (Senha.Length < 6) return Falha("A senha deve ter pelo menos 6 caracteres.", _senha);
+        if (Senha.Length < 8 || Senha.Length > 128) return Falha("A senha deve ter entre 8 e 128 caracteres.", _senha);
         if (Senha != _confirma.Text) return Falha("As senhas não conferem.", _confirma);
         return true;
     }

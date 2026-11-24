@@ -145,7 +145,7 @@ public static class Tema
     public static void Executar(Action acao)
     {
         try { acao(); }
-        catch (Exception ex) { Erro(ex.Message); }
+        catch (Exception ex) { Erro(Erros.Traduzir(ex)); }
     }
 
     public static bool EmailValido(string s) => s.Contains('@') && MailAddress.TryCreate(s, out _);

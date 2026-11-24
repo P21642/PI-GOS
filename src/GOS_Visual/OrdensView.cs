@@ -64,6 +64,7 @@ public sealed class OrdensView : UserControl, IAtualizavel
                 {
                     StatusOS.Aberto => Tema.Alerta,
                     StatusOS.EmAndamento => Tema.Primaria,
+                    StatusOS.Cancelado => Tema.Perigo,
                     _ => Tema.Sucesso
                 };
                 e.CellStyle.Font = Tema.FonteNegrito;
