@@ -255,7 +255,7 @@ begin
     insert into log_auditoria
         (tabela, registro_id, acao, usuario_app_id, usuario_db, dados_antes, dados_depois)
     values
-        ('ordem_servicos', new.id, 'insert', @gos_usuario_id, current_user(), null,
+        ('ordem_servicos', new.id, 'insert', @gos_usuario_id, user(), null,
          concat('status=', new.status,
                 '; descricao=', new.descricao,
                 '; cliente_id=', new.cliente_id,
@@ -270,7 +270,7 @@ begin
     insert into log_auditoria
         (tabela, registro_id, acao, usuario_app_id, usuario_db, dados_antes, dados_depois)
     values
-        ('ordem_servicos', new.id, 'update', @gos_usuario_id, current_user(),
+        ('ordem_servicos', new.id, 'update', @gos_usuario_id, user(),
          concat('status=', old.status,
                 '; descricao=', old.descricao,
                 '; cliente_id=', old.cliente_id,
@@ -292,7 +292,7 @@ begin
     insert into log_auditoria
         (tabela, registro_id, acao, usuario_app_id, usuario_db, dados_antes, dados_depois)
     values
-        ('ordem_servicos', old.id, 'delete', @gos_usuario_id, current_user(),
+        ('ordem_servicos', old.id, 'delete', @gos_usuario_id, user(),
          concat('status=', old.status,
                 '; descricao=', old.descricao,
                 '; cliente_id=', old.cliente_id,
@@ -326,7 +326,7 @@ begin
     insert into log_auditoria
         (tabela, registro_id, acao, usuario_app_id, usuario_db, dados_antes, dados_depois)
     values
-        ('usuarios', new.pessoa_id, 'insert', @gos_usuario_id, current_user(), null,
+        ('usuarios', new.pessoa_id, 'insert', @gos_usuario_id, user(), null,
          concat('cargo=', new.cargo));
 end //
 
@@ -340,7 +340,7 @@ begin
         insert into log_auditoria
             (tabela, registro_id, acao, usuario_app_id, usuario_db, dados_antes, dados_depois)
         values
-            ('usuarios', new.pessoa_id, 'update', @gos_usuario_id, current_user(),
+            ('usuarios', new.pessoa_id, 'update', @gos_usuario_id, user(),
              concat('cargo=', old.cargo,
                     '; bloqueado_ate=', ifnull(old.bloqueado_ate, '-')),
              concat('cargo=', new.cargo,
@@ -356,8 +356,28 @@ begin
     insert into log_auditoria
         (tabela, registro_id, acao, usuario_app_id, usuario_db, dados_antes, dados_depois)
     values
-        ('usuarios', old.pessoa_id, 'delete', @gos_usuario_id, current_user(),
+        ('usuarios', old.pessoa_id, 'delete', @gos_usuario_id, user(),
          concat('cargo=', old.cargo), null);
 end //
 
 delimiter ;
+
+-- ---------------------------------------------------------------------
+--  usuário do banco para a aplicação (menor privilégio).
+--  NÃO rodar com a senha no repositório: execute à parte, no seu
+--  workbench, com uma senha definida por você, e use este usuário no
+--  lugar do root. os triggers gravam no log com os privilégios de quem
+--  os criou, então a aplicação só precisa LER o log.
+-- ---------------------------------------------------------------------
+-- create user 'gos_app'@'localhost' identified by '<definir_fora_do_repositorio>';
+-- grant select, insert, update, delete on gos.pessoas        to 'gos_app'@'localhost';
+-- grant select, insert, update, delete on gos.usuarios       to 'gos_app'@'localhost';
+-- grant select, insert, update, delete on gos.clientes       to 'gos_app'@'localhost';
+-- grant select                         on gos.servicos       to 'gos_app'@'localhost';
+-- grant select, insert, update, delete on gos.ordem_servicos to 'gos_app'@'localhost';
+-- grant select                         on gos.log_auditoria  to 'gos_app'@'localhost';
+-- grant select                         on gos.vw_ordens_detalhadas to 'gos_app'@'localhost';
+-- grant execute on procedure gos.sp_cadastrar_usuario to 'gos_app'@'localhost';
+-- grant execute on procedure gos.sp_cadastrar_cliente to 'gos_app'@'localhost';
+-- grant execute on procedure gos.sp_excluir_usuario   to 'gos_app'@'localhost';
+-- grant execute on procedure gos.sp_excluir_cliente   to 'gos_app'@'localhost';

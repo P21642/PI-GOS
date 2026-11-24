@@ -39,9 +39,9 @@ _(Diagrama arquitetural com fronteiras de confiança: a preencher em `docs/`.)_
 
 Pré-requisitos: Windows, .NET 8 SDK, MySQL 8.0.16+ (e MySQL Workbench, se quiser).
 
-1. Criar o banco: abrir `database/database.sql` no Workbench e executar tudo.
+1. Criar o banco: abrir `database/database.sql` e `database/triggers.sql` no Workbench e executá-los respectivamente.
 2. Criar o usuário do banco da aplicação (comandos comentados no fim do
-   `database.sql`), escolhendo uma senha própria. **Não colocar a senha no código.**
+   `triggers.sql`), escolhendo uma senha própria. **Não colocar a senha no código.**
 3. Configurar as variáveis de ambiente de conexão e de chaves.
    _(Nomes das variáveis: será definido na integração.)_
 4. Compilar e executar:
@@ -76,8 +76,8 @@ Regra do repositório: senhas, chaves e certificados **nunca** são commitados
 | Integrante | RA | Área |
 |---|---|---|
 | _(Matheus Hofstetter Trevisan Pereira)_ | 25021642 | Banco de dados |
-| _(Enrico Marcolini Rosselló)_ | preencham | Integração |
-| _(Luan Victor Fuzinatto)_ | preencham | Criptografia |
+| _(Enrico Marcolini Rosselló)_ | 25021062 | Integração |
+| _(Luan Victor Fuzinatto)_ | 25005577 | Criptografia |
 | _(Gabriel Montagner Ferraz de Toledo)_ | preencham | Visual |
 | _(Caetano Bertoni Squarcini Vicco)_ | 25022360 | Análise de segurança |
 
