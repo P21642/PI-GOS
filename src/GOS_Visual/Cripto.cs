@@ -1,33 +1,4 @@
-// =====================================================================================
-//  !!!  ATENÇÃO: ESTE ARQUIVO É PROVISÓRIO E NÃO CIFRA NADA  !!!
-//
-//  Ele existe só para a integração (banco <-> C#) poder ser compilada e testada
-//  enquanto a criptografia de verdade (AES-256-GCM etc.) não é implementada.
-//  A implementação real é do LUAN e deve SUBSTITUIR o conteúdo deste arquivo.
-//
-//  Enquanto for provisório:
-//   - e-mail e telefone são gravados em TEXTO CLARO, só convertidos em bytes;
-//   - email_hash é um SHA-256 simples, SEM chave (dá para descobrir o e-mail
-//     testando uma lista de candidatos).
-//
-//  Trava de segurança: a aplicação se recusa a iniciar, a menos que exista a
-//  variável de ambiente GOS_PERMITIR_CRIPTO_PROVISORIA=1. Assim, se este arquivo
-//  for esquecido, o sistema não roda sem ninguém perceber.
-//
-//  CONTRATO que a versão real deve manter (o resto do sistema só depende disto):
-//    - public static bool   ChavesOk(out string erro)    -> chamada na inicialização
-//    - public static byte[] CifrarEmail(string email)    -> formato do banco: nonce(12) || cifrado || tag(16)
-//    - public static string DecifrarEmail(byte[] dado)
-//    - public static string HashEmail(string email)      -> HMAC-SHA256 do e-mail normalizado
-//                                                           (minúsculas, sem espaços), hex, 64 caracteres
-//    - public static byte[] CifrarTelefone(string telefone)
-//    - public static string DecifrarTelefone(byte[] dado)
-//  Limites das colunas: email_cifrado varbinary(512), telefone_cifrado varbinary(128)
-//  (o dado cifrado inclui nonce e tag; o provisório já respeita o mesmo limite de texto).
-//  Se a decifragem falhar, lance System.Security.Cryptography.CryptographicException.
-//  Textos longos demais devem lançar ErroDeNegocio (em Models.cs).
-// =====================================================================================
-
+using System;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -35,47 +6,238 @@ namespace GOS;
 
 public static class Cripto
 {
-    // Mesmos limites que a versão real terá (coluna menos nonce de 12 e tag de 16 bytes).
-    private const int MaxBytesEmail = 512 - 12 - 16;
-    private const int MaxBytesTelefone = 128 - 12 - 16;
 
-    private const string VarPermitir = "GOS_PERMITIR_CRIPTO_PROVISORIA";
+    private const string VarChaveHmac = "GOS_HMAC_KEY";
+    private const string VarChaveAes = "GOS_AES_KEY";
 
-    /// <summary>Chamada na inicialização. No provisório, só libera se a variável de teste estiver ligada.</summary>
+    private const int TamanhoChave = 32;  
+    private const int TamanhoNonce = 12;  
+    private const int TamanhoTag = 16;    
+
+    public const int LimiteEmailCifrado = 512;
+    public const int LimiteTelefoneCifrado = 128;
+
+
+    public static string NormalizarEmail(string email)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+
+        return email.Trim().ToLowerInvariant();
+    }
+
+
+    public static string GerarChave()
+    {
+        byte[] chave = RandomNumberGenerator.GetBytes(TamanhoChave); 
+
+        try
+        {
+            return Convert.ToBase64String(chave); 
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(chave);
+        }
+    }
+
+
+    private static byte[] CarregarChave(string nomeVariavel)
+    {
+        string? valor = Environment.GetEnvironmentVariable(nomeVariavel); 
+
+        if (string.IsNullOrWhiteSpace(valor))
+        {
+            throw new InvalidOperationException($"Chave não encontrada: defina a variável de ambiente {nomeVariavel}.");
+        }
+
+        byte[] chave;
+        try
+        {
+            chave = Convert.FromBase64String(valor.Trim());
+        }
+        catch (FormatException)
+        {
+            throw new InvalidOperationException($"A variável {nomeVariavel} não contém uma chave em Base64 válido.");
+        }
+
+        if (chave.Length != TamanhoChave)
+        {
+            int tamanho = chave.Length;
+            CryptographicOperations.ZeroMemory(chave);
+            throw new InvalidOperationException($"A chave {nomeVariavel} deve ter 32 bytes (veio com {tamanho}).");
+        }
+
+        return chave;
+    }
+
+
     public static bool ChavesOk(out string erro)
     {
-        if (Environment.GetEnvironmentVariable(VarPermitir) == "1")
+        try
         {
+            ValidarConfiguracao();
             erro = "";
             return true;
         }
+        catch (InvalidOperationException ex)
+        {
+            erro = ex.Message;
+            return false;
+        }
+    }
+    
 
-        erro = "Criptografia PROVISÓRIA (sem cifragem). Para testar, defina " + VarPermitir + "=1. " +
-               "Para uso real, o Luan deve implementar o Cripto.cs.";
-        return false;
+    public static void ValidarConfiguracao()
+    {
+        byte[] chaveHmac = CarregarChave(VarChaveHmac);
+        byte[] chaveAes = CarregarChave(VarChaveAes);
+
+        try
+        {
+            if (CryptographicOperations.FixedTimeEquals(chaveHmac, chaveAes))
+            {
+                throw new InvalidOperationException($"As chaves {VarChaveHmac} e {VarChaveAes} devem ser diferentes.");
+            }
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(chaveHmac);
+            CryptographicOperations.ZeroMemory(chaveAes);
+        }
     }
 
-    // ------------------------------ e-mail ------------------------------
-    public static byte[] CifrarEmail(string email) => Bytes(email.Trim(), MaxBytesEmail, "E-mail muito longo.");
 
-    public static string DecifrarEmail(byte[] dado) => Encoding.UTF8.GetString(dado);
-
-    /// <summary>PROVISÓRIO: SHA-256 sem chave. A versão real deve usar HMAC-SHA256 com chave secreta.</summary>
     public static string HashEmail(string email)
     {
-        var normalizado = email.Trim().ToLowerInvariant();
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalizado))).ToLowerInvariant();
+        string emailNormalizado = NormalizarEmail(email); 
+        byte[] dados = Encoding.UTF8.GetBytes(emailNormalizado); 
+        byte[] chave = CarregarChave(VarChaveHmac);
+
+        try
+        {
+            byte[] hash = HMACSHA256.HashData(chave, dados); 
+
+            return Convert.ToHexString(hash).ToLowerInvariant(); 
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(chave); 
+        }
     }
 
-    // ----------------------------- telefone -----------------------------
-    public static byte[] CifrarTelefone(string telefone) => Bytes(telefone.Trim(), MaxBytesTelefone, "Telefone muito longo.");
 
-    public static string DecifrarTelefone(byte[] dado) => Encoding.UTF8.GetString(dado);
-
-    private static byte[] Bytes(string texto, int maxBytes, string msgMuitoLongo)
+    public static byte[] Cifrar(string textoPlano, int limiteBytes = int.MaxValue)
     {
-        var bytes = Encoding.UTF8.GetBytes(texto);
-        if (bytes.Length > maxBytes) throw new ErroDeNegocio(msgMuitoLongo);
-        return bytes;
+        ArgumentNullException.ThrowIfNull(textoPlano);
+
+        byte[] dados = Encoding.UTF8.GetBytes(textoPlano);
+        byte[]? chave = null;
+
+        try
+        {
+            int tamanhoFinal = TamanhoNonce + dados.Length + TamanhoTag;
+            if (tamanhoFinal > limiteBytes)
+            {
+                throw new ArgumentException(
+                    $"Texto grande demais para a coluna (máximo de {limiteBytes - TamanhoNonce - TamanhoTag} bytes).",
+                    nameof(textoPlano));
+            }
+
+            chave = CarregarChave(VarChaveAes);
+
+            byte[] resultado = new byte[tamanhoFinal];
+            Span<byte> nonce = resultado.AsSpan(0, TamanhoNonce);
+            Span<byte> cifrado = resultado.AsSpan(TamanhoNonce, dados.Length);
+            Span<byte> tag = resultado.AsSpan(TamanhoNonce + dados.Length, TamanhoTag);
+
+            RandomNumberGenerator.Fill(nonce);
+
+            using var aes = new AesGcm(chave, TamanhoTag);
+            aes.Encrypt(nonce, dados, cifrado, tag);
+
+            return resultado;
+        }
+        finally
+        {
+            if (chave != null) CryptographicOperations.ZeroMemory(chave);
+            CryptographicOperations.ZeroMemory(dados);
+        }
+    }
+
+
+    public static byte[] CifrarEmail(string email)
+    {
+        ArgumentNullException.ThrowIfNull(email);
+        string texto = email.Trim();
+
+        if (Encoding.UTF8.GetByteCount(texto) > LimiteEmailCifrado - TamanhoNonce - TamanhoTag)
+        {
+            throw new ErroDeNegocio("E-mail muito longo.");
+        }
+        
+        return Cifrar(texto, LimiteEmailCifrado);
+    }
+
+
+    public static string DecifrarEmail(byte[] dado)
+    {
+        return Decifrar(dado);
+    }
+
+
+    public static byte[] CifrarTelefone(string telefone)
+    {
+        ArgumentNullException.ThrowIfNull(telefone);
+        string texto = telefone.Trim();
+
+        if (Encoding.UTF8.GetByteCount(texto) > LimiteTelefoneCifrado - TamanhoNonce - TamanhoTag)
+        {
+            throw new ErroDeNegocio("Telefone muito longo.");
+        }
+
+        return Cifrar(texto, LimiteTelefoneCifrado);
+    }
+
+
+    public static string DecifrarTelefone(byte[] dado)
+    {
+        return Decifrar(dado);
+    }   
+    
+     
+    public static string Decifrar(byte[] dados)
+    {
+        ArgumentNullException.ThrowIfNull(dados);
+
+        if (dados.Length < TamanhoNonce + TamanhoTag)
+        {
+            throw new CryptographicException("Dado cifrado inválido.");
+        }
+
+        int tamanhoCifrado = dados.Length - TamanhoNonce - TamanhoTag;
+
+        ReadOnlySpan<byte> nonce = dados.AsSpan(0, TamanhoNonce);
+        ReadOnlySpan<byte> cifrado = dados.AsSpan(TamanhoNonce, tamanhoCifrado);
+        ReadOnlySpan<byte> tag = dados.AsSpan(TamanhoNonce + tamanhoCifrado, TamanhoTag);
+
+        byte[] chave = CarregarChave(VarChaveAes);
+        byte[] plano = new byte[tamanhoCifrado];
+
+        try
+        {
+            using var aes = new AesGcm(chave, TamanhoTag);
+            aes.Decrypt(nonce, cifrado, tag, plano);
+
+            return Encoding.UTF8.GetString(plano);
+        }
+        catch (CryptographicException)
+        {
+            throw new CryptographicException("Falha ao decifrar: dado alterado ou chave incorreta.");
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(chave);
+            CryptographicOperations.ZeroMemory(plano);
+        }
     }
 }
