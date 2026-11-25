@@ -27,14 +27,11 @@ _(Diagrama arquitetural com fronteiras de confiança: a preencher em `docs/`.)_
 
 ## 3. Tecnologias e dependências
 
-> [!IMPORTANTE]
-> **Pendência:** Esta seção sobre a descrição do sistema deve ser preenchida por Luan.
-
 - C# / .NET 8 (Windows Forms)
 - MySQL 8.0.16 ou superior
 - MySqlConnector (acesso ao MySQL)
 - BCrypt.Net-Next (hash de senhas)
-- _(Biblioteca de criptografia: a definir)_
+- System.Security.Cryptography (AesGcm, HMACSHA256 e RandomNumberGenerator)
 
 ## 4. Como compilar, instalar e executar
 
