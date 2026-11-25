@@ -53,10 +53,25 @@ compilação o `dotnet` baixa os pacotes (MySqlConnector e BCrypt.Net-Next), ent
    # $env:GOS_DB_HOST = "localhost"; $env:GOS_DB_PORT = "3306"; $env:GOS_DB_NAME = "gos"
    ```
 
-   > **Criptografia (pendente, responsável: Luan):** enquanto `src/GOS_Visual/Cripto.cs` for a versão
-   > provisória (sem cifragem), a aplicação só inicia com `$env:GOS_PERMITIR_CRIPTO_PROVISORIA = "1"`.
-   > Quando a criptografia real entrar, essa variável deixa de existir e este passo deve listar as
-   > variáveis das chaves e como gerá-las.
+   **Criptografia (chaves):** o aplicativo usa duas chaves AES/HMAC de 32 bytes, em Base64, lidas de
+   variáveis de ambiente (nunca ficam no código nem no banco). Elas precisam ser **diferentes** entre si
+   e **guardadas com segurança**: sem elas, os e-mails e telefones já cadastrados não podem ser decifrados.
+   Para gerar cada chave (rode duas vezes, uma para cada variável):
+
+   ```powershell
+   $b = New-Object byte[] 32
+   [System.Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
+   [Convert]::ToBase64String($b)
+   ```
+
+   ```powershell
+   $env:GOS_HMAC_KEY = "<valor gerado 1>"   # hash do e-mail (HMAC-SHA256)
+   $env:GOS_AES_KEY  = "<valor gerado 2>"   # cifragem de e-mail e telefone (AES-256-GCM)
+   ```
+
+   > Para as chaves valerem sempre (e não só nesta janela), use
+   > `[Environment]::SetEnvironmentVariable("GOS_HMAC_KEY","<valor>","User")` e o mesmo para `GOS_AES_KEY`,
+   > e abra um PowerShell novo.
 
 4. **Compilar e executar** (na mesma janela do PowerShell):
 
