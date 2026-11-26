@@ -1,0 +1,17 @@
+LOGO DA EMPRESA
+===============
+
+Coloque nesta pasta o arquivo da logo com um destes nomes:
+
+    logo.png   (recomendado, de preferência com fundo transparente)
+    logo.jpg
+
+Ela aparece na tela de login e no cabeçalho do programa.
+Basta salvar o arquivo aqui e rodar "dotnet run" de novo.
+
+Se nenhum arquivo for encontrado, o programa mostra uma logo
+provisória (hexágono + texto HIVESEC).
+
+Dica: a logo usada no site está em
+https://www.hivesec.com.br/wa_images/logo_hivesec.jpg
+(abra no navegador, clique com o botão direito e "Salvar imagem como...").

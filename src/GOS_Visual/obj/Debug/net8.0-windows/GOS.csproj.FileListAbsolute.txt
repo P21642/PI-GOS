@@ -1,0 +1,16 @@
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\bin\Debug\net8.0-windows\Assets\LEIA-ME.txt
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\bin\Debug\net8.0-windows\GOS.exe
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\bin\Debug\net8.0-windows\GOS.deps.json
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\bin\Debug\net8.0-windows\GOS.runtimeconfig.json
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\bin\Debug\net8.0-windows\GOS.dll
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\bin\Debug\net8.0-windows\GOS.pdb
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\GOS.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\GOS.AssemblyInfoInputs.cache
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\GOS.AssemblyInfo.cs
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\GOS.csproj.CoreCompileInputs.cache
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\GOS.dll
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\refint\GOS.dll
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\GOS.pdb
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\GOS.genruntimeconfig.cache
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\ref\GOS.dll
+C:\Users\Gabriel\Downloads\GOS_Visual\GOS_Visual\obj\Debug\net8.0-windows\GOS.csproj.Up2Date

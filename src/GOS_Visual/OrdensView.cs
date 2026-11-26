@@ -13,9 +13,10 @@ public sealed class OrdensView : UserControl, IAtualizavel
     private readonly Usuario _logado;
     private readonly DataGridView _grid = new();
     private readonly ComboBox _filtro = new();
-    private readonly Label _qtdAbertas;
-    private readonly Label _qtdAndamento;
-    private readonly Label _qtdConcluidas;
+    private readonly Label _qtdAbertas = CriarNumero();
+    private readonly Label _qtdAndamento = CriarNumero();
+    private readonly Label _qtdConcluidas = CriarNumero();
+    private bool _pronto; // só atualiza a tela depois que ela estiver totalmente montada
 
     public OrdensView(Usuario logado)
     {
@@ -24,13 +25,13 @@ public sealed class OrdensView : UserControl, IAtualizavel
 
         // ---- Cartões de resumo ----
         var cartoes = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0, 0, 0, 4) };
-        cartoes.Controls.Add(Cartao("Abertas", Tema.Alerta, out _qtdAbertas));
-        cartoes.Controls.Add(Cartao("Em andamento", Tema.Primaria, out _qtdAndamento));
-        cartoes.Controls.Add(Cartao("Concluídas", Tema.Sucesso, out _qtdConcluidas));
+        cartoes.Controls.Add(Cartao("Abertas", Tema.Alerta, _qtdAbertas));
+        cartoes.Controls.Add(Cartao("Em andamento", Tema.Azul, _qtdAndamento));
+        cartoes.Controls.Add(Cartao("Concluídas", Tema.Sucesso, _qtdConcluidas));
 
         // ---- Barra de ferramentas ----
         var novo = Tema.Botao("+ Nova ordem", largura: 140);
-        var alterar = Tema.Botao("Alterar status", Tema.Alerta, 140);
+        var alterar = Tema.Botao("Alterar status", Tema.Escuro, 140);
         var detalhes = Tema.Botao("Detalhes", Tema.TextoSuave, 110);
         var excluir = Tema.Botao("Excluir", Tema.Perigo, 100);
         excluir.Visible = logado.Cargo == Cargo.Admin;
@@ -63,8 +64,7 @@ public sealed class OrdensView : UserControl, IAtualizavel
                 e.CellStyle!.ForeColor = st switch
                 {
                     StatusOS.Aberto => Tema.Alerta,
-                    StatusOS.EmAndamento => Tema.Primaria,
-                    StatusOS.Cancelado => Tema.Perigo,
+                    StatusOS.EmAndamento => Tema.Azul,
                     _ => Tema.Sucesso
                 };
                 e.CellStyle.Font = Tema.FonteNegrito;
@@ -72,11 +72,15 @@ public sealed class OrdensView : UserControl, IAtualizavel
         };
 
         Tema.Empilhar(this, cartoes, barra, _grid);
+
+        _pronto = true;
         Atualizar();
     }
 
     public void Atualizar()
     {
+        if (!_pronto) return;
+
         Tema.Executar(() =>
         {
             var todas = OrdemServicoRepository.Listar();
@@ -185,7 +189,16 @@ public sealed class OrdensView : UserControl, IAtualizavel
     }
 
     // ============================ Visual ============================
-    private static Panel Cartao(string titulo, Color cor, out Label valor)
+    private static Label CriarNumero() => new()
+    {
+        Text = "0",
+        AutoSize = true,
+        Font = Tema.FonteNumero,
+        ForeColor = Tema.Texto,
+        Location = new Point(20, 6)
+    };
+
+    private static Panel Cartao(string titulo, Color cor, Label valor)
     {
         var painel = new Panel
         {
@@ -195,14 +208,6 @@ public sealed class OrdensView : UserControl, IAtualizavel
             Margin = new Padding(0, 0, 14, 12)
         };
         var barra = new Panel { Dock = DockStyle.Left, Width = 6, BackColor = cor };
-        valor = new Label
-        {
-            Text = "0",
-            AutoSize = true,
-            Font = Tema.FonteNumero,
-            ForeColor = Tema.Texto,
-            Location = new Point(20, 6)
-        };
         var rotulo = new Label
         {
             Text = titulo,

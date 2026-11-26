@@ -82,7 +82,7 @@ public sealed class MainForm : Form
     {
         _logado = logado;
 
-        Text = "G.O.S. - Gestão de Ordens de Serviço";
+        Text = "HiveSec - Gestão de Ordens de Serviço";
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(1100, 700);
         MinimumSize = new Size(900, 560);
@@ -106,8 +106,9 @@ public sealed class MainForm : Form
                 tela.Atualizar();
         };
 
-        // O controle "Fill" é adicionado primeiro, depois o "Top"
+        // Ordem de docking: "Fill" primeiro; depois a faixa e o cabeçalho (o último fica no topo)
         Controls.Add(_abas);
+        Controls.Add(new Panel { Dock = DockStyle.Top, Height = 4, BackColor = Tema.Primaria });
         Controls.Add(CriarCabecalho());
     }
 
@@ -125,7 +126,7 @@ public sealed class MainForm : Form
         {
             Dock = DockStyle.Top,
             Height = 64,
-            BackColor = Tema.Primaria,
+            BackColor = Tema.Escuro,
             ColumnCount = 3,
             RowCount = 1,
             Padding = new Padding(20, 0, 20, 0)
@@ -135,14 +136,23 @@ public sealed class MainForm : Form
         cabecalho.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         cabecalho.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-        var titulo = new Label
+        var logo = new LogoControl(46, fundoEscuro: true) { Margin = new Padding(0, 9, 0, 0) };
+        var subtitulo = new Label
         {
-            Text = "G.O.S.   |   Gestão de Ordens de Serviço",
+            Text = "Gestão de Ordens de Serviço",
             AutoSize = true,
-            ForeColor = Color.White,
-            Font = Tema.FonteTitulo,
+            ForeColor = Color.FromArgb(212, 212, 216),
+            Font = Tema.Fonte,
+            Margin = new Padding(16, 22, 0, 0)
+        };
+        var titulo = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            WrapContents = false,
             Anchor = AnchorStyles.Left
         };
+        titulo.Controls.Add(logo);
+        titulo.Controls.Add(subtitulo);
 
         var usuario = new Label
         {
@@ -153,7 +163,7 @@ public sealed class MainForm : Form
             Margin = new Padding(0, 8, 16, 0)
         };
 
-        var sair = Tema.Botao("Sair", Color.FromArgb(29, 78, 216), 90);
+        var sair = Tema.Botao("Sair", Color.FromArgb(63, 63, 72), 90);
         sair.Margin = new Padding(0);
         sair.Click += (_, _) =>
         {

@@ -15,8 +15,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="2.3.7" />
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <!-- A logo da empresa fica em Assets\logo.png (ou logo.jpg) e é copiada junto com o programa -->
+    <None Update="Assets\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
