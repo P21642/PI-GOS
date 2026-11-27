@@ -94,11 +94,11 @@ public sealed class LoginForm : Form
 
     public LoginForm()
     {
-        Text = "G.O.S. - Login";
+        Text = "HiveSec - Login";
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
-        ClientSize = new Size(400, 460);
+        ClientSize = new Size(400, 520);
         BackColor = Tema.Cartao;
         Font = Tema.Fonte;
 
@@ -123,29 +123,43 @@ public sealed class LoginForm : Form
         corpo.Controls.Add(_senha);
         corpo.Controls.Add(entrar);
 
-        var topo = new Panel { Dock = DockStyle.Top, Height = 140, BackColor = Tema.Primaria };
+        // ---- Faixa superior com a logo ----
+        var topo = new Panel { Dock = DockStyle.Top, Height = 190, BackColor = Tema.Escuro };
+        var logo = new LogoControl(72, fundoEscuro: true);
         var subtitulo = new Label
         {
             Text = "Gestão de Ordens de Serviço",
-            Dock = DockStyle.Fill,
-            ForeColor = Color.White,
-            Font = Tema.Fonte,
-            TextAlign = ContentAlignment.TopCenter
+            AutoSize = true,
+            ForeColor = Color.FromArgb(212, 212, 216),
+            Font = Tema.Fonte
         };
-        var titulo = new Label
-        {
-            Text = "G.O.S.",
-            Dock = DockStyle.Top,
-            Height = 90,
-            ForeColor = Color.White,
-            Font = new Font("Segoe UI", 32F, FontStyle.Bold),
-            TextAlign = ContentAlignment.BottomCenter
-        };
-        topo.Controls.Add(subtitulo);
-        topo.Controls.Add(titulo);
+        var faixa = new Panel { Dock = DockStyle.Bottom, Height = 5, BackColor = Tema.Primaria };
 
-        // O controle "Fill" é adicionado primeiro, depois o "Top"
+        topo.Controls.Add(faixa);
+        topo.Controls.Add(logo);
+        topo.Controls.Add(subtitulo);
+
+        void Centralizar()
+        {
+            logo.Location = new Point((topo.Width - logo.Width) / 2, 38);
+            subtitulo.Location = new Point((topo.Width - subtitulo.Width) / 2, 38 + logo.Height + 18);
+        }
+        topo.Resize += (_, _) => Centralizar();
+        Centralizar();
+
+        var rodape = new Label
+        {
+            Text = "HiveSec Consultoria",
+            Dock = DockStyle.Bottom,
+            Height = 36,
+            TextAlign = ContentAlignment.MiddleCenter,
+            ForeColor = Tema.TextoSuave,
+            Font = new Font("Segoe UI", 8.5F)
+        };
+
+        // Ordem de docking: "Fill" primeiro, depois "Bottom" e "Top"
         Controls.Add(corpo);
+        Controls.Add(rodape);
         Controls.Add(topo);
 
         AcceptButton = entrar;

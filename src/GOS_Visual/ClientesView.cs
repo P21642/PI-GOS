@@ -13,7 +13,7 @@ public sealed class ClientesView : UserControl, IAtualizavel
         BackColor = Tema.Fundo;
 
         var novo = Tema.Botao("+ Novo cliente", largura: 140);
-        var editar = Tema.Botao("Editar", Tema.Alerta, 100);
+        var editar = Tema.Botao("Editar", Tema.Escuro, 100);
         var excluir = Tema.Botao("Excluir", Tema.Perigo, 100);
 
         _busca.Width = 320;
