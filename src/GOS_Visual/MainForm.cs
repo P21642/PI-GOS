@@ -82,7 +82,7 @@ public sealed class MainForm : Form
     {
         _logado = logado;
 
-        Text = "G.O.S. - Gestão de Ordens de Serviço";
+        Text = "HiveSec - Gestão de Ordens de Serviço";
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(1100, 700);
         MinimumSize = new Size(900, 560);
@@ -135,25 +135,34 @@ public sealed class MainForm : Form
         cabecalho.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         cabecalho.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
-        var titulo = new Label
+        var logo = new LogoControl(46, sobreAmarelo: true) { Margin = new Padding(0, 9, 0, 0) };
+        var subtitulo = new Label
         {
-            Text = "G.O.S.   |   Gestão de Ordens de Serviço",
+            Text = "Gestão de Ordens de Serviço",
             AutoSize = true,
-            ForeColor = Color.White,
-            Font = Tema.FonteTitulo,
+            ForeColor = Tema.Texto,
+            Font = Tema.FonteNegrito,
+            Margin = new Padding(16, 22, 0, 0)
+        };
+        var titulo = new FlowLayoutPanel
+        {
+            AutoSize = true,
+            WrapContents = false,
             Anchor = AnchorStyles.Left
         };
+        titulo.Controls.Add(logo);
+        titulo.Controls.Add(subtitulo);
 
         var usuario = new Label
         {
             Text = $"{_logado.Nome}  ({_logado.Cargo})",
             AutoSize = true,
-            ForeColor = Color.White,
+            ForeColor = Tema.Texto,
             Font = Tema.Fonte,
             Margin = new Padding(0, 8, 16, 0)
         };
 
-        var sair = Tema.Botao("Sair", Color.FromArgb(29, 78, 216), 90);
+        var sair = Tema.Botao("Sair", Color.White, 90);
         sair.Margin = new Padding(0);
         sair.Click += (_, _) =>
         {

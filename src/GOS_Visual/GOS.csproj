@@ -15,12 +15,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="SecurityCodeScan.VS2019" Version="5.6.7">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Coloque a logo da empresa nesta pasta como logo.png (ou logo.jpg): ela é copiada junto com o programa -->
+    <None Update="logo.png;logo.jpg;logo.jpeg" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

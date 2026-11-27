@@ -25,7 +25,7 @@ public sealed class OrdensView : UserControl, IAtualizavel
         // ---- Cartões de resumo ----
         var cartoes = new FlowLayoutPanel { AutoSize = true, WrapContents = false, Margin = new Padding(0, 0, 0, 4) };
         cartoes.Controls.Add(Cartao("Abertas", Tema.Alerta, out _qtdAbertas));
-        cartoes.Controls.Add(Cartao("Em andamento", Tema.Primaria, out _qtdAndamento));
+        cartoes.Controls.Add(Cartao("Em andamento", Tema.Azul, out _qtdAndamento));
         cartoes.Controls.Add(Cartao("Concluídas", Tema.Sucesso, out _qtdConcluidas));
 
         // ---- Barra de ferramentas ----
@@ -63,7 +63,7 @@ public sealed class OrdensView : UserControl, IAtualizavel
                 e.CellStyle!.ForeColor = st switch
                 {
                     StatusOS.Aberto => Tema.Alerta,
-                    StatusOS.EmAndamento => Tema.Primaria,
+                    StatusOS.EmAndamento => Tema.Azul,
                     StatusOS.Cancelado => Tema.Perigo,
                     _ => Tema.Sucesso
                 };

@@ -94,7 +94,7 @@ public sealed class LoginForm : Form
 
     public LoginForm()
     {
-        Text = "G.O.S. - Login";
+        Text = "HiveSec - Login";
         StartPosition = FormStartPosition.CenterScreen;
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
@@ -123,26 +123,26 @@ public sealed class LoginForm : Form
         corpo.Controls.Add(_senha);
         corpo.Controls.Add(entrar);
 
-        var topo = new Panel { Dock = DockStyle.Top, Height = 140, BackColor = Tema.Primaria };
+        // ---- Faixa amarela com a logo ----
+        var topo = new Panel { Dock = DockStyle.Top, Height = 170, BackColor = Tema.Primaria };
+        var logo = new LogoControl(72, sobreAmarelo: true);
         var subtitulo = new Label
         {
             Text = "Gestão de Ordens de Serviço",
-            Dock = DockStyle.Fill,
-            ForeColor = Color.White,
-            Font = Tema.Fonte,
-            TextAlign = ContentAlignment.TopCenter
+            AutoSize = true,
+            ForeColor = Tema.Texto,
+            Font = Tema.FonteNegrito
         };
-        var titulo = new Label
-        {
-            Text = "G.O.S.",
-            Dock = DockStyle.Top,
-            Height = 90,
-            ForeColor = Color.White,
-            Font = new Font("Segoe UI", 32F, FontStyle.Bold),
-            TextAlign = ContentAlignment.BottomCenter
-        };
+        topo.Controls.Add(logo);
         topo.Controls.Add(subtitulo);
-        topo.Controls.Add(titulo);
+
+        void Centralizar()
+        {
+            logo.Location = new Point((topo.Width - logo.Width) / 2, 28);
+            subtitulo.Location = new Point((topo.Width - subtitulo.Width) / 2, 28 + logo.Height + 14);
+        }
+        topo.Resize += (_, _) => Centralizar();
+        Centralizar();
 
         // O controle "Fill" é adicionado primeiro, depois o "Top"
         Controls.Add(corpo);
